@@ -1,0 +1,43 @@
+version: '3.3'
+
+services:
+
+  ftp_server:
+    image: dpk_avtodoria_ftp
+    build: ./ftp_server
+    env_file: .env
+    networks:
+      - container_localnet
+    volumes:
+      - ./ftp_server:/app
+    command: >-
+      sh -c "
+        python ./ftp_server.py \\
+          --kafka-server $${KAFKA_SERVERS} \\
+          --kafka-topic $${KAFKA_TOPIC} \\
+      "
+
+  ftp_client:
+    image: dpk_avtodoria_ftp
+    build: ./ftp_server
+    env_file: .env
+    networks:
+      - container_localnet
+    volumes:
+      - ./ftp_server:/app
+      - ./example_video:/app/data
+
+    command: >-
+      sh -c "
+        sleep 5s && \\
+        python ./ftp_client.py \\
+        --host=ftp_server \\
+        --port=$${FTP_SERVER_PORT} \\
+        --file-to-upload=example-3.mov \\
+      "
+##        --file-to-upload=example-1.mov \\
+##        --file-to-upload=example-2.mov \\
+
+
+networks:
+  container_localnet:
